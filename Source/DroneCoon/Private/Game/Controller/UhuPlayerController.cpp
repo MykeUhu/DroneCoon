@@ -29,8 +29,7 @@ void AUhuPlayerController::BeginPlay()
 {
     Super::BeginPlay();
 
-    UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer());
-    if (Subsystem)
+    if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
     {
         Subsystem->AddMappingContext(UhuIMC, 0);
     }
@@ -58,8 +57,7 @@ void AUhuPlayerController::Input_Move(const FInputActionValue& InputActionValue)
     if (!bPawnIsAlive) return;
     const FVector2D InputAxisVector = InputActionValue.Get<FVector2D>();
 
-    APawn* ControlledPawn = GetPawn();
-    if (ControlledPawn)
+    if (APawn* ControlledPawn = GetPawn())
     {
         const FRotator Rotation = GetControlRotation();
         const FRotator YawRotation(0, Rotation.Yaw, 0);
@@ -81,8 +79,7 @@ void AUhuPlayerController::Input_LookAndRotate(const FInputActionValue& InputAct
     if (bIsMoving)
     {
         // Rotate the character to face the mouse cursor
-        AUhuCharacter* ControlledCharacter = Cast<AUhuCharacter>(GetPawn());
-        if (ControlledCharacter)
+        if (AUhuCharacter* ControlledCharacter = Cast<AUhuCharacter>(GetPawn()))
         {
             FVector MouseLocation, MouseDirection;
             if (DeprojectMousePositionToWorld(MouseLocation, MouseDirection))
