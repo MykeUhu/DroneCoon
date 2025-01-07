@@ -22,6 +22,8 @@ class DRONECOON_API AUhuPlayerController : public APlayerController
 public:
 	AUhuPlayerController();
 
+	bool bPawnIsAlive;
+	
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void OnRep_PlayerState() override;
 

@@ -8,6 +8,7 @@
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 
 
 // Sets default values
@@ -15,25 +16,95 @@ AUhuCharacter::AUhuCharacter()
 {
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
-		
-	// Don't rotate when the controller rotates. Let that just affect the camera.
+
+	// Disable controller rotation affecting character directly
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
 
-	// Configure character movement
-	GetCharacterMovement()->bOrientRotationToMovement = true; // Character moves in the direction of input...	
-	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f); // ...at this rotation rate
+	// Enable replication for multiplayer scenarios
+	bReplicates = true;
 
-	// Create a camera boom (pulls in towards the player if there is a collision)
+	// Configure character movement
+	GetCharacterMovement()->bOrientRotationToMovement = true;
+	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f);
+
+	// Create a camera boom
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
-	CameraBoom->TargetArmLength = 400.0f; // The camera follows at this distance behind the character	
-	CameraBoom->bUsePawnControlRotation = true; // Rotate the arm based on the controller
+	CameraBoom->TargetArmLength = 400.0f;
+	CameraBoom->bUsePawnControlRotation = true;
 
 	// Create a follow camera
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
-	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
-	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
+	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
+	FollowCamera->bUsePawnControlRotation = false;
+}
+
+
+void AUhuCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
+{
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
+}
+
+void AUhuCharacter::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+	
+	APlayerController* PlayerController = Cast<APlayerController>(NewController);
+	if (IsValid(PlayerController))
+	{
+		EnableInput(PlayerController);
+	}
+}
+
+void AUhuCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	// Geschwindigkeit und Luftstatus überprüfen
+	FVector Velocity = GetVelocity();
+	Velocity.Z = 0.f;
+	float Speed = Velocity.Size();
+	bool bIsInAir = GetCharacterMovement()->IsFalling();
+
+	if (Speed > 0.f || bIsInAir) // Charakter bewegt sich oder springt
+	{
+		bUseControllerRotationYaw = true;
+
+		// Berechne die Bewegungsrichtung für Animationen
+		FRotator AimRotation = GetBaseAimRotation();
+		FRotator MovementRotation = UKismetMathLibrary::MakeRotFromX(GetVelocity());
+	}
+	else // Charakter steht still
+	{
+		bUseControllerRotationYaw = false;
+	}
+}
+
+void AUhuCharacter::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+}
+
+void AUhuCharacter::BeginDestroy()
+{
+	Super::BeginDestroy();
+	// Kein spezielles Aufräumen nötig, erst wenn durch Kampf und "Tod" Inventar aufgeräumt werden soll
+}
+
+void AUhuCharacter::UnPossessed()
+{
+	Super::UnPossessed();
+}
+
+void AUhuCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+}
+
+bool AUhuCharacter::IsLocalThirdPerson() const
+{
+	return IsValid(Controller) && Controller->IsLocalPlayerController();
 }
 

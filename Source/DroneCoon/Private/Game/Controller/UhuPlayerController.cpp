@@ -9,6 +9,7 @@ AUhuPlayerController::AUhuPlayerController()
 {
 	// Dieser PlayerController wird über das Netzwerk repliziert
 	bReplicates = true;
+	bPawnIsAlive = true;
 }
 
 void AUhuPlayerController::OnPossess(APawn* InPawn)
@@ -16,6 +17,7 @@ void AUhuPlayerController::OnPossess(APawn* InPawn)
 	// Wird aufgerufen, wenn der Controller das Pawn übernimmt.
 	// Der Standardcode wird hier mit 'Super::OnPossess' aufgerufen.
 	Super::OnPossess(InPawn);
+	bPawnIsAlive = true;
 }
 
 void AUhuPlayerController::OnRep_PlayerState()
@@ -58,36 +60,24 @@ void AUhuPlayerController::SetupInputComponent()
 
 void AUhuPlayerController::Input_Move(const FInputActionValue& InputActionValue)
 {
-	// input is a Vector2D
-	FVector2D MovementVector = Value.Get<FVector2D>();
+	if (!bPawnIsAlive) return;
+	const FVector2D InputAxisVector = InputActionValue.Get<FVector2D>();
+	const FRotator Rotation = GetControlRotation();
+	const FRotator YawRotation(0.f, Rotation.Yaw, 0.f);
 
-	if (Controller != nullptr)
+	const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+	const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+
+	if (APawn* ControlledPawn = GetPawn<APawn>())
 	{
-		// find out which way is forward
-		const FRotator Rotation = Controller->GetControlRotation();
-		const FRotator YawRotation(0, Rotation.Yaw, 0);
-
-		// get forward vector
-		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-	
-		// get right vector 
-		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-
-		// add movement 
-		AddMovementInput(ForwardDirection, MovementVector.Y);
-		AddMovementInput(RightDirection, MovementVector.X);
+		ControlledPawn->AddMovementInput(ForwardDirection, InputAxisVector.Y);
+		ControlledPawn->AddMovementInput(RightDirection, InputAxisVector.X);
 	}
 }
 
 void AUhuPlayerController::Input_Look(const FInputActionValue& InputActionValue)
 {
-	// input is a Vector2D
-	FVector2D LookAxisVector = Value.Get<FVector2D>();
-
-	if (Controller != nullptr)
-	{
-		// add yaw and pitch input to controller
-		AddControllerYawInput(LookAxisVector.X);
-		AddControllerPitchInput(LookAxisVector.Y);
-	}
+	const FVector2D InputAxisVector = InputActionValue.Get<FVector2D>();
+	AddYawInput(InputAxisVector.X);
+	AddPitchInput(InputAxisVector.Y);
 }
