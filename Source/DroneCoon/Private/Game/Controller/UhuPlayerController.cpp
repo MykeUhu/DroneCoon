@@ -6,11 +6,11 @@
 #include "InputMappingContext.h"
 #include "Character/UhuCharacter.h"
 
-AUhuPlayerController::AUhuPlayerController()
+AUhuPlayerController::AUhuPlayerController(): LastLookInput()
 {
     bReplicates = true;
     bPawnIsAlive = true;
-    bIsMouseButtonPressed = false;
+    bIsMoving = false;
 }
 
 void AUhuPlayerController::OnPossess(APawn* InPawn)
@@ -69,14 +69,16 @@ void AUhuPlayerController::Input_Move(const FInputActionValue& InputActionValue)
 
         ControlledPawn->AddMovementInput(ForwardDirection, InputAxisVector.Y);
         ControlledPawn->AddMovementInput(RightDirection, InputAxisVector.X);
+        bIsMoving = true;
     }
+    bIsMoving = false;
 }
 
 void AUhuPlayerController::Input_LookAndRotate(const FInputActionValue& InputActionValue)
 {
     const FVector2D InputAxisVector = InputActionValue.Get<FVector2D>();
     
-    if (bIsMouseButtonPressed)
+    if (bIsMoving)
     {
         // Rotate the character to face the mouse cursor
         AUhuCharacter* ControlledCharacter = Cast<AUhuCharacter>(GetPawn());
@@ -106,34 +108,3 @@ void AUhuPlayerController::Input_LookAndRotate(const FInputActionValue& InputAct
         AddPitchInput(-InputAxisVector.Y);
     }
 }
-
-
-void AUhuPlayerController::Input_MouseButton(const FInputActionValue& InputActionValue)
-{
-    bIsMouseButtonPressed = InputActionValue.Get<bool>();
-    
-    // When the mouse button is pressed, set the character to face the mouse cursor immediately
-    if (bIsMouseButtonPressed)
-    {
-        AUhuCharacter* ControlledCharacter = Cast<AUhuCharacter>(GetPawn());
-        if (ControlledCharacter)
-        {
-            FVector MouseLocation, MouseDirection;
-            if (DeprojectMousePositionToWorld(MouseLocation, MouseDirection))
-            {
-                FPlane GroundPlane(ControlledCharacter->GetActorLocation(), FVector::UpVector);
-                FVector IntersectionPoint = FMath::RayPlaneIntersection(MouseLocation, MouseDirection, GroundPlane);
-                FVector Direction = (IntersectionPoint - ControlledCharacter->GetActorLocation()).GetSafeNormal2D();
-                
-                if (!Direction.IsNearlyZero())
-                {
-                    FRotator NewRotation = Direction.Rotation();
-                    NewRotation.Pitch = 0.0f;
-                    NewRotation.Roll = 0.0f;
-                    ControlledCharacter->SetActorRotation(NewRotation);
-                }
-            }
-        }
-    }
-}
-

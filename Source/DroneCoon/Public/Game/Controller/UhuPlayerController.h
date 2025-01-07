@@ -21,6 +21,7 @@ public:
 	AUhuPlayerController();
 
 	bool bPawnIsAlive;
+	bool bIsMoving;
     
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void OnRep_PlayerState() override;
@@ -43,14 +44,8 @@ private:
 	UPROPERTY(EditAnywhere, Category="Input")
 	TObjectPtr<UInputAction> LookAction;
 
-	UPROPERTY(EditAnywhere, Category="Input")
-	TObjectPtr<UInputAction> MouseButtonAction;
-
 	void Input_Move(const FInputActionValue& InputActionValue);
 	void Input_LookAndRotate(const FInputActionValue& InputActionValue);
-	void Input_MouseButton(const FInputActionValue& InputActionValue);
 
-	bool bIsMouseButtonPressed;
 	FVector2D LastLookInput;
 };
-
