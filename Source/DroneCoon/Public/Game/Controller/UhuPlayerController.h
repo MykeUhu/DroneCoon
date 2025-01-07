@@ -12,9 +12,7 @@ class UInputMappingContext;
 class UInputAction;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayerStateReplicated);
-/**
- * 
- */
+
 UCLASS()
 class DRONECOON_API AUhuPlayerController : public APlayerController
 {
@@ -23,7 +21,7 @@ public:
 	AUhuPlayerController();
 
 	bool bPawnIsAlive;
-	
+    
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void OnRep_PlayerState() override;
 
@@ -33,6 +31,7 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
+	virtual void PlayerTick(float DeltaTime) override;
 
 private:
 	UPROPERTY(EditAnywhere, Category="Input")
@@ -44,6 +43,14 @@ private:
 	UPROPERTY(EditAnywhere, Category="Input")
 	TObjectPtr<UInputAction> LookAction;
 
+	UPROPERTY(EditAnywhere, Category="Input")
+	TObjectPtr<UInputAction> MouseButtonAction;
+
 	void Input_Move(const FInputActionValue& InputActionValue);
-	void Input_Look(const FInputActionValue& InputActionValue);
+	void Input_LookAndRotate(const FInputActionValue& InputActionValue);
+	void Input_MouseButton(const FInputActionValue& InputActionValue);
+
+	bool bIsMouseButtonPressed;
+	FVector2D LastLookInput;
 };
+

@@ -4,80 +4,136 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputMappingContext.h"
+#include "Character/UhuCharacter.h"
 
 AUhuPlayerController::AUhuPlayerController()
 {
-	// Dieser PlayerController wird über das Netzwerk repliziert
-	bReplicates = true;
-	bPawnIsAlive = true;
+    bReplicates = true;
+    bPawnIsAlive = true;
+    bIsMouseButtonPressed = false;
 }
 
 void AUhuPlayerController::OnPossess(APawn* InPawn)
 {
-	// Wird aufgerufen, wenn der Controller das Pawn übernimmt.
-	// Der Standardcode wird hier mit 'Super::OnPossess' aufgerufen.
-	Super::OnPossess(InPawn);
-	bPawnIsAlive = true;
+    Super::OnPossess(InPawn);
+    bPawnIsAlive = true;
 }
 
 void AUhuPlayerController::OnRep_PlayerState()
 {
-	// Wird aufgerufen, wenn der PlayerState des Spielers repliziert wird.
-	// Diese Funktion ermöglicht die Reaktion auf Änderungen im PlayerState, falls benötigt.
-	Super::OnRep_PlayerState();
-	// Hier könnte man Events auslösen, wenn der PlayerState repliziert wird, wie z.B. UI-Aktualisierungen.
-	OnPlayerStateReplicated.Broadcast();
+    Super::OnRep_PlayerState();
+    OnPlayerStateReplicated.Broadcast();
 }
 
 void AUhuPlayerController::BeginPlay()
 {
-	// BeginPlay wird aufgerufen, wenn der Controller zum ersten Mal im Spiel ist.
-	Super::BeginPlay();
+    Super::BeginPlay();
 
-	// Holt das Enhanced Input Subsystem des lokalen Spielers.
-	UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer());
-	if (Subsystem)
-	{
-		// Fügt das Input Mapping Context zu diesem Subsystem hinzu, damit Eingaben mit diesem Context verarbeitet werden können.
-		Subsystem->AddMappingContext(UhuIMC, 0);
-	}
+    UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer());
+    if (Subsystem)
+    {
+        Subsystem->AddMappingContext(UhuIMC, 0);
+    }
 }
 
 void AUhuPlayerController::SetupInputComponent()
 {
-	// SetupInputComponent wird aufgerufen, um alle Eingabebindungen zu konfigurieren.
-	Super::SetupInputComponent();
+    Super::SetupInputComponent();
 
-	// Holt das Enhanced Input Component, das mit dem InputComponent des Controllers verbunden ist.
-	UEnhancedInputComponent* UhuInputComponent = CastChecked<UEnhancedInputComponent>(InputComponent);
+    UEnhancedInputComponent* UhuInputComponent = CastChecked<UEnhancedInputComponent>(InputComponent);
 
-	// Bindet die Move-Action auf das Input Move Event. Dies wird jedes Mal ausgelöst, wenn die Eingabe für die Bewegung erfolgt.
-	UhuInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AUhuPlayerController::Input_Move);
+    UhuInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AUhuPlayerController::Input_Move);
+    UhuInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AUhuPlayerController::Input_LookAndRotate);
+}
 
-	// Bindet die Look-Action auf das Input Look Event. Dies wird jedes Mal ausgelöst, wenn die Eingabe für die Blickrichtung erfolgt.
-	UhuInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AUhuPlayerController::Input_Look);
+void AUhuPlayerController::PlayerTick(float DeltaTime)
+{
+    Super::PlayerTick(DeltaTime);
+
+    // Removed existing camera rotation logic, as it's now handled in Input_LookAndRotate
 }
 
 void AUhuPlayerController::Input_Move(const FInputActionValue& InputActionValue)
 {
-	if (!bPawnIsAlive) return;
-	const FVector2D InputAxisVector = InputActionValue.Get<FVector2D>();
-	const FRotator Rotation = GetControlRotation();
-	const FRotator YawRotation(0.f, Rotation.Yaw, 0.f);
+    if (!bPawnIsAlive) return;
+    const FVector2D InputAxisVector = InputActionValue.Get<FVector2D>();
 
-	const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-	const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+    APawn* ControlledPawn = GetPawn();
+    if (ControlledPawn)
+    {
+        const FRotator Rotation = GetControlRotation();
+        const FRotator YawRotation(0, Rotation.Yaw, 0);
 
-	if (APawn* ControlledPawn = GetPawn<APawn>())
-	{
-		ControlledPawn->AddMovementInput(ForwardDirection, InputAxisVector.Y);
-		ControlledPawn->AddMovementInput(RightDirection, InputAxisVector.X);
-	}
+        const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+        const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+
+        ControlledPawn->AddMovementInput(ForwardDirection, InputAxisVector.Y);
+        ControlledPawn->AddMovementInput(RightDirection, InputAxisVector.X);
+    }
 }
 
-void AUhuPlayerController::Input_Look(const FInputActionValue& InputActionValue)
+void AUhuPlayerController::Input_LookAndRotate(const FInputActionValue& InputActionValue)
 {
-	const FVector2D InputAxisVector = InputActionValue.Get<FVector2D>();
-	AddYawInput(InputAxisVector.X);
-	AddPitchInput(InputAxisVector.Y);
+    const FVector2D InputAxisVector = InputActionValue.Get<FVector2D>();
+    
+    if (bIsMouseButtonPressed)
+    {
+        // Rotate the character to face the mouse cursor
+        AUhuCharacter* ControlledCharacter = Cast<AUhuCharacter>(GetPawn());
+        if (ControlledCharacter)
+        {
+            FVector MouseLocation, MouseDirection;
+            if (DeprojectMousePositionToWorld(MouseLocation, MouseDirection))
+            {
+                FPlane GroundPlane(ControlledCharacter->GetActorLocation(), FVector::UpVector);
+                FVector IntersectionPoint = FMath::RayPlaneIntersection(MouseLocation, MouseDirection, GroundPlane);
+                FVector Direction = (IntersectionPoint - ControlledCharacter->GetActorLocation()).GetSafeNormal2D();
+                
+                if (!Direction.IsNearlyZero())
+                {
+                    FRotator NewRotation = Direction.Rotation();
+                    NewRotation.Pitch = 0.0f;
+                    NewRotation.Roll = 0.0f;
+                    ControlledCharacter->SetActorRotation(FMath::RInterpTo(ControlledCharacter->GetActorRotation(), NewRotation, GetWorld()->GetDeltaSeconds(), 10.0f));
+                }
+            }
+        }
+    }
+    else
+    {
+        // Rotate the camera
+        AddYawInput(InputAxisVector.X);
+        AddPitchInput(-InputAxisVector.Y);
+    }
 }
+
+
+void AUhuPlayerController::Input_MouseButton(const FInputActionValue& InputActionValue)
+{
+    bIsMouseButtonPressed = InputActionValue.Get<bool>();
+    
+    // When the mouse button is pressed, set the character to face the mouse cursor immediately
+    if (bIsMouseButtonPressed)
+    {
+        AUhuCharacter* ControlledCharacter = Cast<AUhuCharacter>(GetPawn());
+        if (ControlledCharacter)
+        {
+            FVector MouseLocation, MouseDirection;
+            if (DeprojectMousePositionToWorld(MouseLocation, MouseDirection))
+            {
+                FPlane GroundPlane(ControlledCharacter->GetActorLocation(), FVector::UpVector);
+                FVector IntersectionPoint = FMath::RayPlaneIntersection(MouseLocation, MouseDirection, GroundPlane);
+                FVector Direction = (IntersectionPoint - ControlledCharacter->GetActorLocation()).GetSafeNormal2D();
+                
+                if (!Direction.IsNearlyZero())
+                {
+                    FRotator NewRotation = Direction.Rotation();
+                    NewRotation.Pitch = 0.0f;
+                    NewRotation.Roll = 0.0f;
+                    ControlledCharacter->SetActorRotation(NewRotation);
+                }
+            }
+        }
+    }
+}
+
