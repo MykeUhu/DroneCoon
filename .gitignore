@@ -1,46 +1,28 @@
-# Unreal Engine Build
-Binaries/
-DerivedDataCache/
-Intermediate/
-Saved/
-Build/
-
-# Unreal Content (optional: spezifischere Pfade je nach Projektstruktur)
 Content/Fab/
 Content/Raccoon/
 Content/Scene_Junkyard/
 Content/Mediterranean_Coast/
 
+Binaries
+DerivedDataCache
+Intermediate
+Saved
+Build
+Plugins
 
-# Editor-bezogene Dateien
-.vscode/
+Content
+
 .idea/
-.vs/
-
-# Projektdateien und Build-Systeme
-*.suo
 *.user
 *.userosscache
-*.sln
 *.sln.docstates
+.vscode
+.vs
 *.VC.db
 *.opensdf
 *.opendb
 *.sdf
-*.xcworkspace
+*.sln
+*.suo
 *.xcodeproj
-
-# Systemdateien
-*.log
-*.pdb
-*.exe
-*.dll
-*.app
-*.dSYM
-*.apk
-
-# Large binary assets (falls nötig)
-*.mp4
-*.psd
-*.zip
-*.rar
+*.xcworkspace
