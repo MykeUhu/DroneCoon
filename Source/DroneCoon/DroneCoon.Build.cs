@@ -17,7 +17,7 @@ public class DroneCoon : ModuleRules
 			"InputCore",
 			"EnhancedInput",
 			"PhysicsCore",
-			"GameLiftServerSDK"
+			"DedicatedServers"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[]
