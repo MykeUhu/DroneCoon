@@ -12,7 +12,7 @@ class FJsonObject;
 /**
  * 
  */
-UCLASS()
+UCLASS(Blueprintable)
 class DEDICATEDSERVERS_API UHTTPRequestManager : public UObject
 {
 	GENERATED_BODY()

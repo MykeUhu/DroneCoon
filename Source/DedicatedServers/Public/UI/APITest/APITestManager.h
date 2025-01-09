@@ -12,7 +12,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnListFleetsResponseReceived, cons
 /**
  * 
  */
-UCLASS(BLueprintable)
+UCLASS()
 class DEDICATEDSERVERS_API UAPITestManager : public UHTTPRequestManager
 {
 	GENERATED_BODY()
