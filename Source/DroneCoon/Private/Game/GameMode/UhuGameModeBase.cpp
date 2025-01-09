@@ -7,7 +7,3 @@
 AUhuGameModeBase::AUhuGameModeBase()
 {
 }
-
-void AUhuGameModeBase::Tick(float DeltaTime)
-{
-}

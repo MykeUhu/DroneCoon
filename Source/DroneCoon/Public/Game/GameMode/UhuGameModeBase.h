@@ -1,6 +1,4 @@
-// Copyright by MykeUhu
-
-#pragma once
+﻿#pragma once
 
 #include "CoreMinimal.h"
 #include "Game/GameMode/DS_GameMode.h"
@@ -16,13 +14,4 @@ class DRONECOON_API AUhuGameModeBase : public ADS_GameMode
 	
 public:
 	AUhuGameModeBase();
-	
-	virtual void Tick(float DeltaTime) override;
-
-protected:
-
-private:
-
-
-
 };

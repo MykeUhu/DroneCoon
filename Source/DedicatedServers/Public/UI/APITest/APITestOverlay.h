@@ -6,8 +6,12 @@
 #include "Blueprint/UserWidget.h"
 #include "APITestOverlay.generated.h"
 
+class UFleetID;
 class UAPITestManager;
 class UListFleetsBox;
+
+struct FDS_ListFleetsResponse;
+
 /**
  * 
  */
@@ -20,6 +24,9 @@ public:
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UAPITestManager> APITestManagerClass;
 
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UFleetID> FleetIDWidgetClass;
+	
 protected:
 	virtual void NativeConstruct() override;
 	
@@ -29,5 +36,11 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<UAPITestManager> APITestManager;
+
+	UFUNCTION()
+	void ListFleetsButtonClicked();
+
+	UFUNCTION()
+	void OnListFleetsResponseReceived(const FDS_ListFleetsResponse& ListFleetsResponse, bool bWasSuccessful);
 
 };
