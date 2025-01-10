@@ -36,8 +36,25 @@ void UHTTPRequestManager::DumpMetaData(TSharedPtr<FJsonObject> JsonObject)
 	if (JsonObject->HasField(TEXT("$metadata")))
 	{
 		TSharedPtr<FJsonObject> MetaDataJsonObject = JsonObject->GetObjectField(TEXT("$metadata"));
-		FDS_MetaData DSMetaData;
-		FJsonObjectConverter::JsonObjectToUStruct(MetaDataJsonObject.ToSharedRef(), &DSMetaData);
-		DSMetaData.Dump();
+		FDS_MetaData DS_MetaData;
+		FJsonObjectConverter::JsonObjectToUStruct(MetaDataJsonObject.ToSharedRef(), &DS_MetaData);
+		DS_MetaData.Dump();
 	}
+}
+
+FString UHTTPRequestManager::SerializeJsonContent(const TMap<FString, FString>& Params)
+{
+	// Json Object erstellen, String Field erstellen
+	TSharedPtr<FJsonObject> ContentJsonObject = MakeShareable(new FJsonObject);
+
+	for (const auto& Param : Params)
+	{
+		ContentJsonObject->SetStringField(Param.Key, Param.Value);
+	}
+
+	FString Content; // JsonWriter schreibt in Content und serialisiert es
+	TSharedRef<TJsonWriter<>> JsonWriter = TJsonWriterFactory<>::Create(&Content);
+	FJsonSerializer::Serialize(ContentJsonObject.ToSharedRef(), JsonWriter);
+
+	return Content;
 }

@@ -36,7 +36,7 @@ void UAPITestManager::ListFleets()
 void UAPITestManager::ListFleets_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
     // Zeigt eine Debug-Nachricht an, dass eine Antwort eingegangen ist.
-    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "List Fleets Response Received");
+    // GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "List Fleets Response Received");
 
     /*
         JSON-Reader Erklärung:
