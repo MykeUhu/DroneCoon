@@ -2,21 +2,31 @@
 
 
 #include "DedicatedServers/Public/Game/GameMode/DS_GameMode.h"
+//#include "DiscordSubsystem.h"
+
+#include "Kismet/GameplayStatics.h"
 
 DEFINE_LOG_CATEGORY(LogDS_GameMode);
 
 void ADS_GameMode::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+    
 }
 
 void ADS_GameMode::BeginPlay()
 {
 	Super::BeginPlay();
+
 	
 #if WITH_GAMELIFT
 	InitGameLift();
 #endif
+}
+
+void ADS_GameMode::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+    Super::EndPlay(EndPlayReason);
 }
 
 /**

@@ -8,6 +8,7 @@
 #include "DS_GameMode.generated.h"
 
 
+class UDiscordSubsystem;
 DECLARE_LOG_CATEGORY_EXTERN(LogDS_GameMode, Log, All);
 /**
  * 
@@ -16,10 +17,13 @@ UCLASS()
 class DEDICATEDSERVERS_API ADS_GameMode : public AGameMode
 {
 	GENERATED_BODY()
+public:
+	
 	virtual void Tick(float DeltaTime) override;
-
+	
 protected:
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 private:
 	// Process Parameters needs to remain in scope for the lifetime of the app

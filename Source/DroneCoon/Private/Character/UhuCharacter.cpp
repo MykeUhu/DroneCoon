@@ -1,7 +1,6 @@
 ﻿// Copyright by MykeUhu
 
-#include "UhuCharacter.h"
-#include "EnhancedInputSubsystems.h"
+#include "Character/UhuCharacter.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -69,6 +68,7 @@ void AUhuCharacter::UnPossessed()
 void AUhuCharacter::BeginPlay()
 {
     Super::BeginPlay();
+
 }
 
 bool AUhuCharacter::IsLocalThirdPerson() const

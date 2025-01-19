@@ -158,6 +158,7 @@ void UPortalManager::CreatePlayerSession_Response(FHttpRequestPtr Request, FHttp
 		
 		APlayerController* LocalPlayerController = GEngine->GetFirstLocalPlayerController(GetWorld());
 		if (IsValid(LocalPlayerController))
+			
 		{
 			FInputModeGameOnly InputModeData;
 			LocalPlayerController->SetInputMode(InputModeData);
